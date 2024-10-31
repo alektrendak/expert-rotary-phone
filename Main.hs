@@ -25,5 +25,5 @@ parseBrackets code = goParseBrackets code 0 [] (fromList [])
             | c == '[' = goParseBrackets cs (i + 1) (i:stack) m
             | c == ']' = case stack of
                 [] -> Nothing
-                (j:stack') -> goParseBrackets cs (i + 1) stack' (insert j i m)
+                (j:stack') -> goParseBrackets cs (i + 1) stack' (insert i j (insert j i m))
             | otherwise = goParseBrackets cs (i + 1) stack m
