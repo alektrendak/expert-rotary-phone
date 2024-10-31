@@ -1,7 +1,7 @@
 import Data.Map (Map, findWithDefault, fromList, insert, (!))
 import Data.Typeable (typeOf)
 import System.Environment (getArgs)
-import System.IO (readFile)
+import System.IO (hIsEOF, readFile, stdin)
 
 main :: IO ()
 main = do
@@ -43,8 +43,12 @@ run code bracketMap = goRun code 0 0 (fromList []) bracketMap
                 putChar (toEnum (m ! p))
                 goRun code (i + 1) p m bracketMap
             | code!!i == ',' = do
-                c' <- getChar
-                goRun code (i + 1) p (insert p (fromEnum c') m) bracketMap
+                isEof <- hIsEOF stdin
+                if isEof
+                    then goRun code (i + 1) p (insert p 0 m) bracketMap
+                    else do
+                        c' <- getChar
+                        goRun code (i + 1) p (insert p (fromEnum c') m) bracketMap
             | code!!i == '[' = if (findWithDefault 0 p m) == 0
                 then goRun code (bracketMap ! i) p m bracketMap
                 else goRun code (i + 1) p m bracketMap
