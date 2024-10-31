@@ -15,43 +15,43 @@ main = do
         _ -> putStrLn "Usage: runhaskell Main.hs <filename>"
 
 parseBrackets :: String -> Maybe (Map Int Int)
-parseBrackets code = goParseBrackets code 0 [] (fromList [])
+parseBrackets code = go code 0 [] (fromList [])
     where
-        goParseBrackets :: String -> Int -> [Int] -> Map Int Int -> Maybe (Map Int Int)
-        goParseBrackets [] _ [] m = Just m
-        goParseBrackets [] _ _ _ = Nothing
-        goParseBrackets (c:cs) i stack m
-            | c == '[' = goParseBrackets cs (i + 1) (i:stack) m
+        go :: String -> Int -> [Int] -> Map Int Int -> Maybe (Map Int Int)
+        go [] _ [] m = Just m
+        go [] _ _ _ = Nothing
+        go (c:cs) i stack m
+            | c == '[' = go cs (i + 1) (i:stack) m
             | c == ']' = case stack of
                 [] -> Nothing
-                (j:stack') -> goParseBrackets cs (i + 1) stack' (insert i j (insert j i m))
-            | otherwise = goParseBrackets cs (i + 1) stack m
+                (j:stack') -> go cs (i + 1) stack' (insert i j (insert j i m))
+            | otherwise = go cs (i + 1) stack m
 
 run :: String -> Map Int Int -> IO ()
-run code bracketMap = goRun code 0 0 (fromList []) bracketMap
+run code bracketMap = go code 0 0 (fromList [])
     where
-        goRun :: String -> Int -> Int -> Map Int Int -> Map Int Int -> IO ()
-        goRun code i _ _ _
+        go :: String -> Int -> Int -> Map Int Int -> IO ()
+        go code i _ _
             | i == length(code) = return ()
-        goRun code i p m bracketMap
-            | code!!i == '>' = goRun code (i + 1) (p + 1) m bracketMap
-            | code!!i == '<' = goRun code (i + 1) (p - 1) m bracketMap
-            | code!!i == '+' = goRun code (i + 1) p (insert p ((findWithDefault 0 p m) + 1) m) bracketMap
-            | code!!i == '-' = goRun code (i + 1) p (insert p ((findWithDefault 0 p m) - 1) m) bracketMap
+        go code i p m
+            | code!!i == '>' = go code (i + 1) (p + 1) m
+            | code!!i == '<' = go code (i + 1) (p - 1) m
+            | code!!i == '+' = go code (i + 1) p (insert p ((findWithDefault 0 p m) + 1) m)
+            | code!!i == '-' = go code (i + 1) p (insert p ((findWithDefault 0 p m) - 1) m)
             | code!!i == '.' = do
                 putChar (toEnum (m ! p))
-                goRun code (i + 1) p m bracketMap
+                go code (i + 1) p m
             | code!!i == ',' = do
                 isEof <- hIsEOF stdin
                 if isEof
-                    then goRun code (i + 1) p (insert p 0 m) bracketMap
+                    then go code (i + 1) p (insert p 0 m)
                     else do
                         c' <- getChar
-                        goRun code (i + 1) p (insert p (fromEnum c') m) bracketMap
+                        go code (i + 1) p (insert p (fromEnum c') m)
             | code!!i == '[' = if (findWithDefault 0 p m) == 0
-                then goRun code (bracketMap ! i) p m bracketMap
-                else goRun code (i + 1) p m bracketMap
+                then go code (bracketMap ! i) p m
+                else go code (i + 1) p m
             | code!!i == ']' = if (findWithDefault 0 p m) /= 0
-                then goRun code (bracketMap ! i) p m bracketMap
-                else goRun code (i + 1) p m bracketMap
-            | otherwise = goRun code (i + 1) p m bracketMap
+                then go code (bracketMap ! i) p m
+                else go code (i + 1) p m
+            | otherwise = go code (i + 1) p m
