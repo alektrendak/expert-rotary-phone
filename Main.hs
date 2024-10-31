@@ -9,10 +9,9 @@ main = do
     case args of
         [fileName] -> do
             code <- readFile fileName
-            bracketMap <- case parseBrackets code of
-                Just m -> return m
+            case parseBrackets code of
+                Just bracketMap -> run code bracketMap
                 Nothing -> fail "Unbalanced brackets"
-            run code bracketMap
         _ -> putStrLn "Usage: runhaskell Main.hs <filename>"
 
 parseBrackets :: String -> Maybe (Map Int Int)
